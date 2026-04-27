@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>904小幫手</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700&display=swap');
+  :root { --bg:#F5F0E8;--surface:#FFFDF8;--border:#E0D8CC;--text:#2C2416;--text-muted:#8A7F6E;--accent-a:#D45F3C;--accent-a-light:#FAE8E2;--accent-b:#4A7C59;--accent-b-light:#E2EFE6;--radius:12px; }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:'Noto Sans TC',sans-serif;background:var(--bg);min-height:100vh;display:flex;align-items:flex-start;justify-content:center;padding:36px 16px 60px;color:var(--text)}
+  .card{background:var(--surface);border:1px solid var(--border);border-radius:20px;box-shadow:0 2px 16px rgba(44,36,22,0.09);width:100%;max-width:540px;overflow:hidden}
+  .header{background:var(--text);color:#FFF8EE;padding:24px 28px 0}
+  .header-top{display:flex;align-items:center;gap:10px;margin-bottom:18px}
+  .header-icon{font-size:26px;line-height:1}
+  .header h1{font-size:20px;font-weight:700;letter-spacing:.02em}
+  .header p{font-size:12px;color:#B8A890;margin-top:2px}
+  .tabs{display:flex}
+  .tab{flex:1;padding:10px 0;font-size:13px;font-weight:500;color:#6B5A44;cursor:pointer;text-align:center;border-radius:10px 10px 0 0;transition:background .15s,color .15s;user-select:none}
+  .tab:hover{color:#FFF8EE;background:rgba(255,255,255,0.08)}
+  .tab.active-a{background:var(--accent-a);color:white}
+  .tab.active-b{background:var(--accent-b);color:white}
+  .panel{display:none;padding:26px 28px 30px;flex-direction:column;gap:18px}
+  .panel.visible{display:flex}
+  .field{display:flex;flex-direction:column;gap:6px}
+  label{font-size:11px;font-weight:500;color:var(--text-muted);letter-spacing:.09em;text-transform:uppercase}
+  label .req{color:var(--accent-a);margin-left:2px}
+  .panel-b label .req{color:var(--accent-b)}
+  input,select,textarea{font-family:'Noto Sans TC',sans-serif;font-size:14px;color:var(--text);background:var(--bg);border:1.5px solid var(--border);border-radius:var(--radius);padding:10px 13px;width:100%;outline:none;transition:border-color .18s,box-shadow .18s;appearance:none;-webkit-appearance:none}
+  .panel-a input:focus,.panel-a select:focus,.panel-a textarea:focus{border-color:var(--accent-a);box-shadow:0 0 0 3px var(--accent-a-light);background:var(--surface)}
+  .panel-b input:focus,.panel-b select:focus,.panel-b textarea:focus{border-color:var(--accent-b);box-shadow:0 0 0 3px var(--accent-b-light);background:var(--surface)}
+  textarea{resize:vertical;min-height:76px;line-height:1.6}
+  .select-wrap{position:relative}
+  .select-wrap::after{content:'';position:absolute;right:13px;top:50%;transform:translateY(-50%);width:0;height:0;border-left:4px solid transparent;border-right:4px solid transparent;border-top:5px solid var(--text-muted);pointer-events:none}
+  .row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  .check-row{display:flex;align-items:center;gap:10px;background:var(--bg);border:1.5px solid var(--border);border-radius:var(--radius);padding:10px 13px;cursor:pointer}
+  .check-row input[type=checkbox]{width:18px;height:18px;padding:0;cursor:pointer;accent-color:var(--accent-b);flex-shrink:0}
+  .check-row span{font-size:14px;color:var(--text)}
+  .tags-wrap{display:flex;flex-wrap:wrap;gap:7px;background:var(--bg);border:1.5px solid var(--border);border-radius:var(--radius);padding:9px 12px;min-height:46px}
+  .tag-pill{display:inline-flex;align-items:center;padding:3px 10px;border-radius:20px;font-size:12px;font-weight:500;cursor:pointer;transition:opacity .12s}
+  .tag-pill.active{opacity:1}.tag-pill.inactive{opacity:.3}
+  .tag-重要{background:#FAEAEA;color:#A03030}.tag-回條{background:#FAEEDA;color:#854F0B}.tag-通知單{background:#E2EFE6;color:#2F6142}.tag-活動{background:#E6F1FB;color:#185FA5}.tag-其他{background:#F1EFE8;color:#5F5E5A}
+  .btn{border:none;border-radius:var(--radius);padding:13px;font-size:15px;font-family:'Noto Sans TC',sans-serif;font-weight:700;cursor:pointer;width:100%;letter-spacing:.05em;transition:filter .15s,transform .1s;margin-top:4px;color:white}
+  .btn-a{background:var(--accent-a)}.btn-b{background:var(--accent-b)}
+  .btn:hover{filter:brightness(.9)}.btn:active{transform:scale(.98)}
+  .btn:disabled{background:var(--border);color:var(--text-muted);cursor:not-allowed;filter:none;transform:none}
+  .toast{display:none;align-items:center;gap:8px;padding:11px 14px;border-radius:var(--radius);font-size:13px;font-weight:500;margin-top:2px}
+  .toast.success{display:flex;background:#E2F0E7;color:#2F6142;border:1px solid #C0DCC8}
+  .toast.error{display:flex;background:#FAEAEA;color:#A03030;border:1px solid #F0C0C0}
+  .spinner{display:none;width:17px;height:17px;border:2px solid rgba(255,255,255,0.35);border-top-color:white;border-radius:50%;animation:spin .7s linear infinite;margin:0 auto}
+  @keyframes spin{to{transform:rotate(360deg)}}
+  .btn.loading .btn-text{display:none}.btn.loading .spinner{display:block}
+  @media(max-width:480px){.panel{padding:20px}.header{padding:20px 20px 0}.row{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div class="card">
+  <div class="header">
+    <div class="header-top">
+      <span class="header-icon">🍑</span>
+      <div><h1>904 小幫手</h1><p>填寫後直接寫入 Notion 表格</p></div>
+    </div>
+    <div class="tabs">
+      <div class="tab active-a" id="tab-a" onclick="switchTab('a')">📚 功課</div>
+      <div class="tab" id="tab-b" onclick="switchTab('b')">📋 班級事務</div>
+    </div>
+  </div>
+  <div class="panel panel-a visible" id="panel-a">
+    <div class="field"><label>時間 <span class="req">*</span></label><input type="datetime-local" id="a-time"></div>
+    <div class="field"><label>日期</label><input type="date" id="a-date"></div>
+    <div class="row">
+      <div class="field"><label>科目 <span class="req">*</span></label><div class="select-wrap"><select id="a-subject"><option value="">— 選擇 —</option><option>國文</option><option>數學</option><option>英文</option><option>歷史</option><option>地理</option><option>公民</option><option>理化</option><option>生物</option><option>地科</option><option>體育</option><option>音樂</option><option>美術</option></select></div></div>
+      <div class="field"><label>選取</label><div class="select-wrap"><select id="a-type"><option value="">— 選擇 —</option><option>作業</option><option>考試</option><option>預習</option><option>複習</option><option>其他</option></select></div></div>
+    </div>
+    <div class="field"><label>範圍</label><input type="text" id="a-range" placeholder="例：題本+歷屆試題、題本*1"></div>
+    <div class="field"><label>序號</label><input type="text" id="a-serial" placeholder="例：國1、自、社會"></div>
+    <div class="field"><label>缺交表</label><textarea id="a-missing" placeholder="填寫缺交學生或備注…"></textarea></div>
+    <button class="btn btn-a" id="btn-a" onclick="submitA()"><span class="btn-text">寫入功課表 ✦</span><div class="spinner"></div></button>
+    <div class="toast" id="toast-a"></div>
+  </div>
+  <div class="panel panel-b" id="panel-b">
+    <div class="field">
+      <label>班級事務 <span class="req">*</span> <span style="font-size:10px;font-weight:400;text-transform:none;letter-spacing:0">可複選</span></label>
+      <div class="tags-wrap" id="tags-wrap">
+        <span class="tag-pill tag-重要 inactive" data-val="重要‼" onclick="toggleTag(this)">重要‼</span>
+        <span class="tag-pill tag-回條 inactive" data-val="回條" onclick="toggleTag(this)">回條</span>
+        <span class="tag-pill tag-通知單 inactive" data-val="通知單" onclick="toggleTag(this)">通知單</span>
+        <span class="tag-pill tag-活動 inactive" data-val="活動" onclick="toggleTag(this)">活動</span>
+        <span class="tag-pill tag-其他 inactive" data-val="其他" onclick="toggleTag(this)">其他</span>
+      </div>
+    </div>
+    <div class="field"><label>內容 <span class="req">*</span></label><textarea id="b-content" placeholder="填寫事務說明內容…"></textarea></div>
+    <div class="row">
+      <div class="field"><label>截止日期</label><input type="date" id="b-deadline"></div>
+      <div class="field"><label>序號</label><input type="text" id="b-serial" placeholder="例：視力"></div>
+    </div>
+    <div class="field"><label>缺交人數</label><input type="number" id="b-missing" placeholder="0" min="0"></div>
+    <div class="field"><label>簽名</label><label class="check-row" for="b-signed"><input type="checkbox" id="b-signed"><span>已完成簽名收集</span></label></div>
+    <button class="btn btn-b" id="btn-b" onclick="submitB()"><span class="btn-text">寫入班級事務 ✦</span><div class="spinner"></div></button>
+    <div class="toast" id="toast-b"></div>
+  </div>
+</div>
+<script>
+const PROXY_URL='https://notion-proxy-homework.vercel.app/api/notion';
+const DB_A='2516977fdc478071b8b3cc18b671416f';
+const DB_B='2516977fdc4780ffa513fa7aff57a132';
+function switchTab(t){document.getElementById('panel-a').classList.toggle('visible',t==='a');document.getElementById('panel-b').classList.toggle('visible',t==='b');document.getElementById('tab-a').className='tab'+(t==='a'?' active-a':'');document.getElementById('tab-b').className='tab'+(t==='b'?' active-b':'');}
+function toggleTag(el){el.classList.toggle('active');el.classList.toggle('inactive');}
+function getSelectedTags(){return[...document.querySelectorAll('#tags-wrap .tag-pill.active')].map(el=>({name:el.dataset.val}));}
+function showToast(id,type,msg){const t=document.getElementById(id);t.className='toast '+type;t.textContent=(type==='success'?'✓ ':'✕ ')+msg;setTimeout(()=>{t.className='toast';},6000);}
+function notionDT(val){return val?(val.length===10?val:val+':00'):null;}
+async function submitA(){
+  const subject=document.getElementById('a-subject').value;
+  const timeVal=document.getElementById('a-time').value;
+  if(!subject){showToast('toast-a','error','請選擇科目');return;}
+  if(!timeVal){showToast('toast-a','error','請填入時間');return;}
+  const btn=document.getElementById('btn-a');btn.disabled=true;btn.classList.add('loading');
+  const props={};
+  props['時間']={date:{start:notionDT(timeVal)}};
+  const dv=document.getElementById('a-date').value;if(dv)props['日期']={date:{start:dv}};
+  props['科目']={select:{name:subject}};
+  const tv=document.getElementById('a-type').value;if(tv)props['選取']={select:{name:tv}};
+  const rv=document.getElementById('a-range').value.trim();if(rv)props['範圍']={rich_text:[{text:{content:rv}}]};
+  const sv=document.getElementById('a-serial').value.trim();if(sv)props['序號']={title:[{text:{content:sv}}]};
+  const mv=document.getElementById('a-missing').value.trim();if(mv)props['缺交表']={rich_text:[{text:{content:mv}}]};
+  await postNotion(DB_A,props,'toast-a',['a-subject','a-type','a-range','a-serial','a-missing']);
+  btn.disabled=false;btn.classList.remove('loading');
+}
+async function submitB(){
+  const tags=getSelectedTags();const content=document.getElementById('b-content').value.trim();
+  if(!tags.length){showToast('toast-b','error','請選擇至少一項班級事務');return;}
+  if(!content){showToast('toast-b','error','請填入內容');return;}
+  const btn=document.getElementById('btn-b');btn.disabled=true;btn.classList.add('loading');
+  const props={};
+  props['班級事務']={multi_select:tags};
+  props['內容']={rich_text:[{text:{content}}]};
+  const dl=document.getElementById('b-deadline').value;if(dl)props['截止日期']={date:{start:dl}};
+  const sv=document.getElementById('b-serial').value.trim();if(sv)props['序號']={title:[{text:{content:sv}}]};
+  const mn=document.getElementById('b-missing').value;if(mn!=='')props['缺交表']={number:parseInt(mn,10)};
+  props['簽名']={checkbox:document.getElementById('b-signed').checked};
+  await postNotion(DB_B,props,'toast-b',['b-content','b-deadline','b-serial','b-missing']);
+  btn.disabled=false;btn.classList.remove('loading');
+}
+async function postNotion(dbId,properties,toastId,clearIds){
+  try{
+    const res=await fetch(PROXY_URL,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({parent:{database_id:dbId},properties})});
+    const data=await res.json();
+    if(res.ok){showToast(toastId,'success','成功寫入 Notion！');clearIds.forEach(id=>{document.getElementById(id).value='';});}
+    else{showToast(toastId,'error','寫入失敗：'+(data.message||data.code||'未知錯誤'));console.error(data);}
+  }catch(e){showToast(toastId,'error','網路錯誤：'+e.message);}
+}
+window.addEventListener('load',()=>{
+  const pad=n=>String(n).padStart(2,'0');const now=new Date();
+  document.getElementById('a-time').value=`${now.getFullYear()}-${pad(now.getMonth()+1)}-${pad(now.getDate())}T${pad(now.getHours())}:${pad(now.getMinutes())}`;
+  document.getElementById('a-date').value=`${now.getFullYear()}-${pad(now.getMonth()+1)}-${pad(now.getDate())}`;
+});
+</script>
+</body>
+</html>
