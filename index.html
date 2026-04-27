@@ -93,7 +93,7 @@
       <div class="field"><label>截止日期</label><input type="date" id="b-deadline"></div>
       <div class="field"><label>序號</label><input type="text" id="b-serial" placeholder="例：視力"></div>
     </div>
-    <div class="field"><label>簽名</label><label class="check-row" for="b-signed"><input type="checkbox" id="b-signed"><span>已完成簽名收集</span></label></div>
+    <div class="field"><label>簽名</label><div class="check-row" onclick="document.getElementById('b-signed').click()"><input type="checkbox" id="b-signed"><span>已完成簽名收集</span></div></div>
     <button class="btn btn-b" id="btn-b" onclick="submitB()"><span class="btn-text">寫入班級事務 ✦</span><div class="spinner"></div></button>
     <div class="toast" id="toast-b"></div>
   </div>
