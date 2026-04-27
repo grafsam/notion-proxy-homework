@@ -6,7 +6,7 @@
 <title>904小幫手</title>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700&display=swap');
-  :root { --bg:#F5F0E8;--surface:#FFFDF8;--border:#E0D8CC;--text:#2C2416;--text-muted:#8A7F6E;--accent-a:#D45F3C;--accent-a-light:#FAE8E2;--accent-b:#4A7C59;--accent-b-light:#E2EFE6;--radius:12px; }
+  :root{--bg:#F5F0E8;--surface:#FFFDF8;--border:#E0D8CC;--text:#2C2416;--text-muted:#8A7F6E;--accent-a:#D45F3C;--accent-a-light:#FAE8E2;--accent-b:#4A7C59;--accent-b-light:#E2EFE6;--radius:12px}
   *{box-sizing:border-box;margin:0;padding:0}
   body{font-family:'Noto Sans TC',sans-serif;background:var(--bg);min-height:100vh;display:flex;align-items:flex-start;justify-content:center;padding:36px 16px 60px;color:var(--text)}
   .card{background:var(--surface);border:1px solid var(--border);border-radius:20px;box-shadow:0 2px 16px rgba(44,36,22,0.09);width:100%;max-width:540px;overflow:hidden}
@@ -57,12 +57,12 @@
 <div class="card">
   <div class="header">
     <div class="header-top">
-      <span class="header-icon">🍑</span>
+      <span class="header-icon">&#x1F351;</span>
       <div><h1>904 小幫手</h1><p>填寫後直接寫入 Notion 表格</p></div>
     </div>
     <div class="tabs">
-      <div class="tab active-a" id="tab-a" onclick="switchTab('a')">📚 功課</div>
-      <div class="tab" id="tab-b" onclick="switchTab('b')">📋 班級事務</div>
+      <div class="tab active-a" id="tab-a" onclick="switchTab('a')">&#x1F4DA; 功課</div>
+      <div class="tab" id="tab-b" onclick="switchTab('b')">&#x1F4CB; 班級事務</div>
     </div>
   </div>
   <div class="panel panel-a visible" id="panel-a">
@@ -101,59 +101,112 @@
   </div>
 </div>
 <script>
-const PROXY_URL='https://notion-proxy-homework.vercel.app/api/notion';
-const DB_A='2516977fdc478071b8b3cc18b671416f';
-const DB_B='2516977fdc4780ffa513fa7aff57a132';
-function switchTab(t){document.getElementById('panel-a').classList.toggle('visible',t==='a');document.getElementById('panel-b').classList.toggle('visible',t==='b');document.getElementById('tab-a').className='tab'+(t==='a'?' active-a':'');document.getElementById('tab-b').className='tab'+(t==='b'?' active-b':'');}
-function toggleTag(el){el.classList.toggle('active');el.classList.toggle('inactive');}
-function getSelectedTags(){return[...document.querySelectorAll('#tags-wrap .tag-pill.active')].map(el=>({name:el.dataset.val}));}
-function showToast(id,type,msg){const t=document.getElementById(id);t.className='toast '+type;t.textContent=(type==='success'?'✓ ':'✕ ')+msg;setTimeout(()=>{t.className='toast';},6000);}
-function notionDT(val){return val?(val.length===10?val:val+':00'):null;}
-async function submitA(){
-  const subject=document.getElementById('a-subject').value;
-  const timeVal=document.getElementById('a-time').value;
+var PROXY_URL='https://notion-proxy-homework.vercel.app/api/notion';
+var DB_A='2516977fdc478071b8b3cc18b671416f';
+var DB_B='2516977fdc4780ffa513fa7aff57a132';
+
+function switchTab(t){
+  document.getElementById('panel-a').classList.toggle('visible',t==='a');
+  document.getElementById('panel-b').classList.toggle('visible',t==='b');
+  document.getElementById('tab-a').className='tab'+(t==='a'?' active-a':'');
+  document.getElementById('tab-b').className='tab'+(t==='b'?' active-b':'');
+}
+
+function toggleTag(el){
+  el.classList.toggle('active');
+  el.classList.toggle('inactive');
+}
+
+function getSelectedTags(){
+  return Array.from(document.querySelectorAll('#tags-wrap .tag-pill.active')).map(function(el){return{name:el.dataset.val};});
+}
+
+function showToast(id,type,msg){
+  var t=document.getElementById(id);
+  t.className='toast '+type;
+  t.textContent=(type==='success'?'✓ ':'✕ ')+msg;
+  setTimeout(function(){t.className='toast';},6000);
+}
+
+function notionDT(val){
+  if(!val) return null;
+  return val.length===10?val:val+':00';
+}
+
+function submitA(){
+  var subject=document.getElementById('a-subject').value;
+  var timeVal=document.getElementById('a-time').value;
   if(!subject){showToast('toast-a','error','請選擇科目');return;}
   if(!timeVal){showToast('toast-a','error','請填入時間');return;}
-  const btn=document.getElementById('btn-a');btn.disabled=true;btn.classList.add('loading');
-  const props={};
+  var btn=document.getElementById('btn-a');
+  btn.disabled=true;btn.classList.add('loading');
+  var props={};
   props['時間']={date:{start:notionDT(timeVal)}};
-  const dv=document.getElementById('a-date').value;if(dv)props['日期']={date:{start:dv}};
+  var dv=document.getElementById('a-date').value;
+  if(dv) props['日期']={date:{start:dv}};
   props['科目']={select:{name:subject}};
-  const tv=document.getElementById('a-type').value;if(tv)props['選取']={select:{name:tv}};
-  const rv=document.getElementById('a-range').value.trim();if(rv)props['範圍']={rich_text:[{text:{content:rv}}]};
-  const sv=document.getElementById('a-serial').value.trim();if(sv)props['序號']={title:[{text:{content:sv}}]};
-  const mv=document.getElementById('a-missing').value.trim();if(mv)props['缺交表']={rich_text:[{text:{content:mv}}]};
-  await postNotion(DB_A,props,'toast-a',['a-subject','a-type','a-range','a-serial','a-missing']);
-  btn.disabled=false;btn.classList.remove('loading');
+  var tv=document.getElementById('a-type').value;
+  if(tv) props['選取']={select:{name:tv}};
+  var rv=document.getElementById('a-range').value.trim();
+  if(rv) props['範圍']={rich_text:[{text:{content:rv}}]};
+  var sv=document.getElementById('a-serial').value.trim();
+  if(sv) props['序號']={title:[{text:{content:sv}}]};
+  var mv=document.getElementById('a-missing').value.trim();
+  if(mv) props['缺交表']={rich_text:[{text:{content:mv}}]};
+  postNotion(DB_A,props,'toast-a',['a-subject','a-type','a-range','a-serial','a-missing'],btn);
 }
-async function submitB(){
-  const tags=getSelectedTags();const content=document.getElementById('b-content').value.trim();
+
+function submitB(){
+  var tags=getSelectedTags();
+  var content=document.getElementById('b-content').value.trim();
   if(!tags.length){showToast('toast-b','error','請選擇至少一項班級事務');return;}
   if(!content){showToast('toast-b','error','請填入內容');return;}
-  const btn=document.getElementById('btn-b');btn.disabled=true;btn.classList.add('loading');
-  const props={};
+  var btn=document.getElementById('btn-b');
+  btn.disabled=true;btn.classList.add('loading');
+  var props={};
   props['班級事務']={multi_select:tags};
-  props['內容']={rich_text:[{text:{content}}]};
-  const dl=document.getElementById('b-deadline').value;if(dl)props['截止日期']={date:{start:dl}};
-  const sv=document.getElementById('b-serial').value.trim();if(sv)props['序號']={title:[{text:{content:sv}}]};
-  const mn=document.getElementById('b-missing').value;if(mn!=='')props['缺交表']={number:parseInt(mn,10)};
+  props['內容']={rich_text:[{text:{content:content}}]};
+  var dl=document.getElementById('b-deadline').value;
+  if(dl) props['截止日期']={date:{start:dl}};
+  var sv=document.getElementById('b-serial').value.trim();
+  if(sv) props['序號']={title:[{text:{content:sv}}]};
+  var mn=document.getElementById('b-missing').value;
+  if(mn!=='') props['缺交表']={number:parseInt(mn,10)};
   props['簽名']={checkbox:document.getElementById('b-signed').checked};
-  await postNotion(DB_B,props,'toast-b',['b-content','b-deadline','b-serial','b-missing']);
-  btn.disabled=false;btn.classList.remove('loading');
+  postNotion(DB_B,props,'toast-b',['b-content','b-deadline','b-serial','b-missing'],btn);
 }
-async function postNotion(dbId,properties,toastId,clearIds){
-  try{
-    const res=await fetch(PROXY_URL,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({parent:{database_id:dbId},properties})});
-    const data=await res.json();
-    if(res.ok){showToast(toastId,'success','成功寫入 Notion！');clearIds.forEach(id=>{document.getElementById(id).value='';});}
-    else{showToast(toastId,'error','寫入失敗：'+(data.message||data.code||'未知錯誤'));console.error(data);}
-  }catch(e){showToast(toastId,'error','網路錯誤：'+e.message);}
+
+function postNotion(dbId,properties,toastId,clearIds,btn){
+  fetch(PROXY_URL,{
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({parent:{database_id:dbId},properties:properties})
+  }).then(function(res){
+    return res.json().then(function(data){return{ok:res.ok,data:data};});
+  }).then(function(r){
+    if(r.ok){
+      showToast(toastId,'success','成功寫入 Notion！');
+      clearIds.forEach(function(id){document.getElementById(id).value='';});
+    } else {
+      showToast(toastId,'error','寫入失敗：'+(r.data.message||r.data.code||'未知錯誤'));
+    }
+    btn.disabled=false;btn.classList.remove('loading');
+  }).catch(function(e){
+    showToast(toastId,'error','網路錯誤：'+e.message);
+    btn.disabled=false;btn.classList.remove('loading');
+  });
 }
-window.addEventListener('load',()=>{
-  const pad=n=>String(n).padStart(2,'0');const now=new Date();
-  document.getElementById('a-time').value=`${now.getFullYear()}-${pad(now.getMonth()+1)}-${pad(now.getDate())}T${pad(now.getHours())}:${pad(now.getMinutes())}`;
-  document.getElementById('a-date').value=`${now.getFullYear()}-${pad(now.getMonth()+1)}-${pad(now.getDate())}`;
-});
+
+window.onload=function(){
+  var now=new Date();
+  var y=now.getFullYear();
+  var mo=String(now.getMonth()+1).padStart(2,'0');
+  var d=String(now.getDate()).padStart(2,'0');
+  var h=String(now.getHours()).padStart(2,'0');
+  var mi=String(now.getMinutes()).padStart(2,'0');
+  document.getElementById('a-time').value=y+'-'+mo+'-'+d+'T'+h+':'+mi;
+  document.getElementById('a-date').value=y+'-'+mo+'-'+d;
+};
 </script>
 </body>
 </html>
