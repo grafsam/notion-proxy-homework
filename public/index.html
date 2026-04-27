@@ -149,7 +149,6 @@ function submitA(){
   if(rv) props['範圍']={rich_text:[{text:{content:rv}}]};
   var sv=document.getElementById('a-serial').value.trim();
   if(sv) props['序號']={title:[{text:{content:sv}}]};
-  var mv=document.getElementById('a-missing').value.trim();
   // 缺交表為 Relation 類型，略過
   postNotion(DB_A,props,'toast-a',['a-subject','a-type','a-range','a-serial'],btn);
 }
@@ -168,7 +167,6 @@ function submitB(){
   if(dl) props['截止日期']={date:{start:dl}};
   var sv=document.getElementById('b-serial').value.trim();
   if(sv) props['序號']={title:[{text:{content:sv}}]};
-  var mn=document.getElementById('b-missing').value;
   // 缺交表為 Relation 類型，略過
   props['簽名']={checkbox:document.getElementById('b-signed').checked};
   postNotion(DB_B,props,'toast-b',['b-content','b-deadline','b-serial'],btn);
