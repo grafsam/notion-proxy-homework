@@ -74,7 +74,6 @@
     </div>
     <div class="field"><label>範圍</label><input type="text" id="a-range" placeholder="例：題本+歷屆試題、題本*1"></div>
     <div class="field"><label>序號</label><input type="text" id="a-serial" placeholder="例：國1、自、社會"></div>
-    <div class="field"><label>缺交表</label><textarea id="a-missing" placeholder="填寫缺交學生或備注…"></textarea></div>
     <button class="btn btn-a" id="btn-a" onclick="submitA()"><span class="btn-text">寫入功課表 ✦</span><div class="spinner"></div></button>
     <div class="toast" id="toast-a"></div>
   </div>
@@ -94,7 +93,6 @@
       <div class="field"><label>截止日期</label><input type="date" id="b-deadline"></div>
       <div class="field"><label>序號</label><input type="text" id="b-serial" placeholder="例：視力"></div>
     </div>
-    <div class="field"><label>缺交人數</label><input type="number" id="b-missing" placeholder="0" min="0"></div>
     <div class="field"><label>簽名</label><label class="check-row" for="b-signed"><input type="checkbox" id="b-signed"><span>已完成簽名收集</span></label></div>
     <button class="btn btn-b" id="btn-b" onclick="submitB()"><span class="btn-text">寫入班級事務 ✦</span><div class="spinner"></div></button>
     <div class="toast" id="toast-b"></div>
@@ -153,7 +151,7 @@ function submitA(){
   if(sv) props['序號']={title:[{text:{content:sv}}]};
   var mv=document.getElementById('a-missing').value.trim();
   // 缺交表為 Relation 類型，略過
-  postNotion(DB_A,props,'toast-a',['a-subject','a-type','a-range','a-serial','a-missing'],btn);
+  postNotion(DB_A,props,'toast-a',['a-subject','a-type','a-range','a-serial'],btn);
 }
 
 function submitB(){
@@ -173,7 +171,7 @@ function submitB(){
   var mn=document.getElementById('b-missing').value;
   // 缺交表為 Relation 類型，略過
   props['簽名']={checkbox:document.getElementById('b-signed').checked};
-  postNotion(DB_B,props,'toast-b',['b-content','b-deadline','b-serial','b-missing'],btn);
+  postNotion(DB_B,props,'toast-b',['b-content','b-deadline','b-serial'],btn);
 }
 
 function postNotion(dbId,properties,toastId,clearIds,btn){
@@ -210,3 +208,4 @@ window.onload=function(){
 </script>
 </body>
 </html>
+
