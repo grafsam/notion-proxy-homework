@@ -135,6 +135,7 @@ function switchTab(t){
   document.getElementById('tab-b').className='tab'+(t==='b'?' active-b':'');
   document.getElementById('tab-c').className='tab'+(t==='c'?' active-c':'');
   document.getElementById('tab-d').className='tab'+(t==='d'?' active-d':'');
+  if(t==='d') loadStudents();
 }
 
 function toggleTag(el){
@@ -418,19 +419,33 @@ function downloadCard(){}
 
 var DB_ABSENCE='2596977fdc478059bcd2cab532d84abe';
 
-var STUDENTS=[
-  '1王辰旭','2沈群翰','3林呈曄','4張棣勛','5陳侑澤','6陳竑維','7陳翊','8楊定桀','9楊甯文','10葉東霖',
-  '11蔡奇恩','12蘇煒宸','13林昕蓁','14張絜妤','15莊丹譯','16蔡品妍'
-];
-
-window.addEventListener('load',function(){
+function loadStudents(){
   var sel=document.getElementById('d-student');
-  STUDENTS.forEach(function(s){
-    var opt=document.createElement('option');
-    opt.value=s;opt.textContent=s;
-    sel.appendChild(opt);
+  sel.innerHTML='<option value="">載入中...</option>';
+  fetch('https://notion-proxy-homework.vercel.app/api/notion-query',{
+    method:'POST',headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({database_id:DB_ABSENCE})
+  }).then(function(r){return r.json();}).then(function(data){
+    sel.innerHTML='<option value="">— 選擇 —</option>';
+    if(!data.results||data.results.length===0) return;
+    // Sort by 座號 title
+    var students=data.results.map(function(p){
+      var title=p.properties['座號']&&p.properties['座號'].title&&p.properties['座號'].title[0]?p.properties['座號'].title[0].plain_text:'';
+      return title;
+    }).filter(function(s){return s!='';});
+    students.sort(function(a,b){
+      var na=parseInt(a);var nb=parseInt(b);
+      return na-nb;
+    });
+    students.forEach(function(s){
+      var opt=document.createElement('option');
+      opt.value=s;opt.textContent=s;
+      sel.appendChild(opt);
+    });
+  }).catch(function(){
+    sel.innerHTML='<option value="">載入失敗，請重試</option>';
   });
-});
+}
 
 function queryAbsence(){
   var student=document.getElementById('d-student').value;
