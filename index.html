@@ -288,7 +288,7 @@ function drawCard(d,homeworks,events){
 
   var days=['日','一','二','三','四','五','六'];
   var dateStr=(d.getMonth()+1)+'月'+d.getDate()+'日（'+days[d.getDay()]+'）';
-  ctx.font='18px sans-serif';
+  ctx.font='22px sans-serif';
   ctx.textAlign='right';
   ctx.fillText(dateStr,W-padX,46);
   ctx.textAlign='left';
@@ -303,7 +303,7 @@ function drawCard(d,homeworks,events){
   ctx.fillText('功課',padX+14,y);
   y+=lineH;
 
-  ctx.font='18px sans-serif';
+  ctx.font='22px sans-serif';
   if(homeworks.length===0){
     ctx.fillStyle='#8A7F6E';
     ctx.fillText('（無功課）',padX+14,y);
@@ -331,7 +331,7 @@ function drawCard(d,homeworks,events){
   ctx.fillText('班級事務',padX+14,y);
   y+=lineH;
 
-  ctx.font='18px sans-serif';
+  ctx.font='22px sans-serif';
   if(events.length===0){
     ctx.fillStyle='#8A7F6E';
     ctx.fillText('（無事務）',padX+14,y);
