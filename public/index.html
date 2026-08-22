@@ -100,10 +100,6 @@
     <div class="toast" id="toast-b"></div>
   </div>
   <div class="panel panel-c" id="panel-c">
-    <div class="field">
-      <label>選擇日期</label>
-      <input type="date" id="c-date">
-    </div>
     <button class="btn btn-c" id="btn-c" onclick="generateCard()"><span class="btn-text">讀取並產生圖卡 ✦</span><div class="spinner"></div></button>
     <div class="toast" id="toast-c"></div>
     <div id="card-preview" style="display:none;margin-top:8px;">
@@ -211,28 +207,18 @@ function postNotion(dbId,properties,toastId,clearIds,btn){
 
 
 function generateCard(){
-  var dateVal=document.getElementById('c-date').value;
-  if(!dateVal){showToast('toast-c','error','請選擇日期');return;}
   var btn=document.getElementById('btn-c');
   btn.disabled=true;btn.classList.add('loading');
 
-  var filterDate=dateVal; // e.g. 2026-08-21
-
-  // Query both databases
-  // 功課：時間是 datetime，用 on_or_after + before 當天範圍
-  var nextDay=new Date(filterDate+'T00:00:00');
-  nextDay.setDate(nextDay.getDate()+1);
-  var nextDayStr=nextDay.getFullYear()+'-'+String(nextDay.getMonth()+1).padStart(2,'0')+'-'+String(nextDay.getDate()).padStart(2,'0');
-
+  // 讀取全部資料，不篩選日期
   var queryA=fetch('https://notion-proxy-homework.vercel.app/api/notion-query',{
     method:'POST',headers:{'Content-Type':'application/json'},
-    body:JSON.stringify({database_id:DB_A,filter:{and:[{property:'時間',date:{on_or_after:filterDate}},{property:'時間',date:{before:nextDayStr}}]}})
+    body:JSON.stringify({database_id:DB_A})
   }).then(function(r){return r.json();});
 
-  // 班級事務：截止時間是 datetime，用當天範圍查詢
   var queryB=fetch('https://notion-proxy-homework.vercel.app/api/notion-query',{
     method:'POST',headers:{'Content-Type':'application/json'},
-    body:JSON.stringify({database_id:DB_B,filter:{and:[{property:'截止時間',date:{on_or_after:filterDate}},{property:'截止時間',date:{before:nextDayStr}}]}})
+    body:JSON.stringify({database_id:DB_B})
   }).then(function(r){return r.json();});
 
   Promise.all([queryA,queryB]).then(function(results){
@@ -261,7 +247,7 @@ function generateCard(){
       });
     }
 
-    drawCard(dateVal,homeworks,events);
+    var today=new Date();var d=today;drawCard(d,homeworks,events);
     btn.disabled=false;btn.classList.remove('loading');
   }).catch(function(e){
     showToast('toast-c','error','讀取失敗：'+e.message);
@@ -269,7 +255,7 @@ function generateCard(){
   });
 }
 
-function drawCard(dateVal,homeworks,events){
+function drawCard(d,homeworks,events){
   var canvas=document.getElementById('card-canvas');
   var W=640;
   var lineH=32;
@@ -302,7 +288,6 @@ function drawCard(dateVal,homeworks,events){
   ctx.font='bold 20px serif';
   ctx.fillText('小幫手聯絡簿',padX,36);
 
-  var d=new Date(dateVal+'T00:00:00');
   var days=['日','一','二','三','四','五','六'];
   var dateStr=(d.getMonth()+1)+'月'+d.getDate()+'日（'+days[d.getDay()]+'）';
   ctx.font='14px serif';
@@ -377,7 +362,7 @@ function drawCard(dateVal,homeworks,events){
 function downloadCard(){
   var canvas=document.getElementById('card-canvas');
   var a=document.createElement('a');
-  a.download='聯絡簿_'+document.getElementById('c-date').value+'.png';
+  var nd=new Date();a.download='聯絡簿_'+nd.getFullYear()+(nd.getMonth()+1)+nd.getDate()+'.png';
   a.href=canvas.toDataURL('image/png');
   a.click();
 }
