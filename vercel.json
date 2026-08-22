@@ -3,6 +3,7 @@
   "routes": [
     { "src": "/api/notion", "dest": "/api/notion.js" },
     { "src": "/api/notion-query", "dest": "/api/notion-query.js" },
+    { "src": "/api/notion-page", "dest": "/api/notion-page.js" },
     { "src": "/(.*)", "dest": "/index.html" }
   ]
 }
