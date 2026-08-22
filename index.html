@@ -219,11 +219,17 @@ function generateCard(){
   var filterDate=dateVal; // e.g. 2026-08-21
 
   // Query both databases
+  // 功課：時間是 datetime，用 on_or_after + before 當天範圍
+  var nextDay=new Date(filterDate+'T00:00:00');
+  nextDay.setDate(nextDay.getDate()+1);
+  var nextDayStr=nextDay.getFullYear()+'-'+String(nextDay.getMonth()+1).padStart(2,'0')+'-'+String(nextDay.getDate()).padStart(2,'0');
+
   var queryA=fetch('https://notion-proxy-homework.vercel.app/api/notion-query',{
     method:'POST',headers:{'Content-Type':'application/json'},
-    body:JSON.stringify({database_id:DB_A,filter:{property:'日期',date:{equals:filterDate}}})
+    body:JSON.stringify({database_id:DB_A,filter:{and:[{property:'時間',date:{on_or_after:filterDate}},{property:'時間',date:{before:nextDayStr}}]}})
   }).then(function(r){return r.json();});
 
+  // 班級事務：截止日期是 date
   var queryB=fetch('https://notion-proxy-homework.vercel.app/api/notion-query',{
     method:'POST',headers:{'Content-Type':'application/json'},
     body:JSON.stringify({database_id:DB_B,filter:{property:'截止日期',date:{equals:filterDate}}})
