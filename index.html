@@ -22,6 +22,7 @@
   .tab.active-a{background:var(--accent-a);color:white}
   .tab.active-b{background:var(--accent-b);color:white}
   .tab.active-c{background:#5B6FA6;color:white}
+  .tab.active-d{background:#8B5A2B;color:white}
   .panel{display:none;padding:26px 28px 30px;flex-direction:column;gap:18px}
   .panel.visible{display:flex}
   .field{display:flex;flex-direction:column;gap:6px}
@@ -43,7 +44,7 @@
   .tag-pill.active{opacity:1}.tag-pill.inactive{opacity:.3}
   .tag-重要{background:#FAEAEA;color:#A03030}.tag-回條{background:#FAEEDA;color:#854F0B}.tag-通知單{background:#E2EFE6;color:#2F6142}.tag-活動{background:#E6F1FB;color:#185FA5}.tag-其他{background:#F1EFE8;color:#5F5E5A}
   .btn{border:none;border-radius:var(--radius);padding:13px;font-size:15px;font-family:'Noto Sans TC',sans-serif;font-weight:700;cursor:pointer;width:100%;letter-spacing:.05em;transition:filter .15s,transform .1s;margin-top:4px;color:white}
-  .btn-a{background:var(--accent-a)}.btn-b{background:var(--accent-b)}.btn-c{background:#5B6FA6}
+  .btn-a{background:var(--accent-a)}.btn-b{background:var(--accent-b)}.btn-c{background:#5B6FA6}.btn-d{background:#8B5A2B}
   .btn:hover{filter:brightness(.9)}.btn:active{transform:scale(.98)}
   .btn:disabled{background:var(--border);color:var(--text-muted);cursor:not-allowed;filter:none;transform:none}
   .toast{display:none;align-items:center;gap:8px;padding:11px 14px;border-radius:var(--radius);font-size:13px;font-weight:500;margin-top:2px}
@@ -66,6 +67,7 @@
       <div class="tab active-a" id="tab-a" onclick="switchTab('a')">&#x1F4DA; 功課</div>
       <div class="tab" id="tab-b" onclick="switchTab('b')">&#x1F4CB; 班級事務</div>
       <div class="tab" id="tab-c" onclick="switchTab('c')">&#x1F5BC; 圖卡</div>
+      <div class="tab" id="tab-d" onclick="switchTab('d')">&#x1F4CB; 缺交</div>
     </div>
   </div>
   <div class="panel panel-a visible" id="panel-a">
@@ -105,6 +107,19 @@
     <div class="toast" id="toast-c"></div>
     <div id="card-preview" style="display:none;margin-top:8px;"></div>
   </div>
+  <div class="panel panel-d" id="panel-d">
+    <div class="field">
+      <label>選擇學生</label>
+      <div class="select-wrap">
+        <select id="d-student">
+          <option value="">— 選擇 —</option>
+        </select>
+      </div>
+    </div>
+    <button class="btn btn-d" id="btn-d" onclick="queryAbsence()"><span class="btn-text">查詢缺交 ✦</span><div class="spinner"></div></button>
+    <div class="toast" id="toast-d"></div>
+    <div id="absence-preview" style="display:none;margin-top:8px;"></div>
+  </div>
 </div>
 <script>
 var PROXY_URL='https://notion-proxy-homework.vercel.app/api/notion';
@@ -115,9 +130,11 @@ function switchTab(t){
   document.getElementById('panel-a').classList.toggle('visible',t==='a');
   document.getElementById('panel-b').classList.toggle('visible',t==='b');
   document.getElementById('panel-c').classList.toggle('visible',t==='c');
+  document.getElementById('panel-d').classList.toggle('visible',t==='d');
   document.getElementById('tab-a').className='tab'+(t==='a'?' active-a':'');
   document.getElementById('tab-b').className='tab'+(t==='b'?' active-b':'');
   document.getElementById('tab-c').className='tab'+(t==='c'?' active-c':'');
+  document.getElementById('tab-d').className='tab'+(t==='d'?' active-d':'');
 }
 
 function toggleTag(el){
@@ -398,6 +415,179 @@ function drawCard(d,homeworks,events){
 }
 
 function downloadCard(){}
+
+var DB_ABSENCE='2596977fdc478059bcd2cab532d84abe';
+
+var STUDENTS=[
+  '1王辰旭','2沈群翰','3林呈曄','4張棣勛','5陳侑澤','6陳竑維','7陳翊','8楊定桀','9楊甯文','10葉東霖',
+  '11蔡奇恩','12蘇煒宸','13林昕蓁','14張絜妤','15莊丹譯','16蔡品妍'
+];
+
+window.addEventListener('load',function(){
+  var sel=document.getElementById('d-student');
+  STUDENTS.forEach(function(s){
+    var opt=document.createElement('option');
+    opt.value=s;opt.textContent=s;
+    sel.appendChild(opt);
+  });
+});
+
+function queryAbsence(){
+  var student=document.getElementById('d-student').value;
+  if(!student){showToast('toast-d','error','請選擇學生');return;}
+  var btn=document.getElementById('btn-d');
+  btn.disabled=true;btn.classList.add('loading');
+
+  // Query 缺交表 for this student (filter by 座號 title)
+  fetch('https://notion-proxy-homework.vercel.app/api/notion-query',{
+    method:'POST',headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({database_id:DB_ABSENCE,filter:{property:'座號',title:{equals:student}}})
+  }).then(function(r){return r.json();}).then(function(data){
+    if(!data.results||data.results.length===0){
+      showToast('toast-d','success',student+' 無缺交記錄！');
+      btn.disabled=false;btn.classList.remove('loading');
+      return;
+    }
+    var row=data.results[0].properties;
+
+    // Get relation page IDs
+    var evIds=(row['🥝 班級事務小幫手資料庫 ']&&row['🥝 班級事務小幫手資料庫 '].relation)||[];
+    var hwIds=(row['🥭 功課小幫手資料庫']&&row['🥭 功課小幫手資料庫'].relation)||[];
+
+    // Fetch all related pages
+    var fetches=[];
+    evIds.forEach(function(rel){
+      fetches.push(fetch('https://notion-proxy-homework.vercel.app/api/notion-page',{
+        method:'POST',headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({page_id:rel.id})
+      }).then(function(r){return r.json();}).then(function(p){return{type:'ev',page:p};}));
+    });
+    hwIds.forEach(function(rel){
+      fetches.push(fetch('https://notion-proxy-homework.vercel.app/api/notion-page',{
+        method:'POST',headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({page_id:rel.id})
+      }).then(function(r){return r.json();}).then(function(p){return{type:'hw',page:p};}));
+    });
+
+    Promise.all(fetches).then(function(pages){
+      var hwItems=[];
+      var evItems=[];
+      pages.forEach(function(item){
+        if(item.type==='hw'){
+          var props=item.page.properties;
+          var subject=props['科目']&&props['科目'].select?props['科目'].select.name:'';
+          var type=props['選取']&&props['選取'].select?props['選取'].select.name:'';
+          var range=props['範圍']&&props['範圍'].rich_text&&props['範圍'].rich_text[0]?props['範圍'].rich_text[0].plain_text:'';
+          if(subject) hwItems.push({subject:subject,type:type,range:range});
+        } else {
+          var props=item.page.properties;
+          var content=props['內容']&&props['內容'].rich_text&&props['內容'].rich_text[0]?props['內容'].rich_text[0].plain_text:'';
+          if(content) evItems.push({content:content,signed:false});
+        }
+      });
+      drawAbsenceCard(student,hwItems,evItems);
+      btn.disabled=false;btn.classList.remove('loading');
+    });
+  }).catch(function(e){
+    showToast('toast-d','error','查詢失敗：'+e.message);
+    btn.disabled=false;btn.classList.remove('loading');
+  });
+}
+
+function drawAbsenceCard(student,homeworks,events){
+  var W=1000;
+  var lineH=58;
+  var padX=50;
+  var padY=44;
+  var headerH=108;
+  var footerH=50;
+
+  var hwItems=homeworks.length===0?['（無缺交功課）']:homeworks.map(function(hw){return'・'+hw.subject+(hw.type?' ［'+hw.type+'］':'')+(hw.range?' '+hw.range:'');});
+  var evItems=events.length===0?['（無缺交事務）']:events.map(function(ev){return'・'+ev.content;});
+
+  var rows=['hw_header'].concat(hwItems).concat(['ev_header']).concat(evItems);
+  var H=headerH+padY+rows.length*lineH+padY+footerH;
+
+  var preview=document.getElementById('absence-preview');
+  preview.innerHTML='';
+
+  var canvas=document.createElement('canvas');
+  canvas.style.width='100%';
+  canvas.style.borderRadius='12px';
+  canvas.style.border='1px solid #E0D8CC';
+  canvas.style.display='block';
+  canvas.width=W;canvas.height=H;
+  var ctx=canvas.getContext('2d');
+
+  ctx.fillStyle='#FFFDF8';
+  ctx.fillRect(0,0,W,H);
+
+  // Header
+  ctx.fillStyle='#5C3310';
+  ctx.fillRect(0,0,W,headerH);
+  ctx.fillStyle='#FFF8EE';
+  ctx.font='bold 40px sans-serif';
+  ctx.fillText('缺交查詢',padX,66);
+  ctx.font='32px sans-serif';
+  ctx.textAlign='right';
+  ctx.fillText(student,W-padX,66);
+  ctx.textAlign='left';
+
+  var y=headerH+padY;
+  rows.forEach(function(row){
+    if(row==='hw_header'){
+      ctx.fillStyle='#D45F3C';
+      ctx.fillRect(padX,y-28,6,36);
+      ctx.fillStyle='#2C2416';
+      ctx.font='bold 34px sans-serif';
+      ctx.fillText('缺交功課',padX+18,y);
+      y+=lineH;
+    } else if(row==='ev_header'){
+      ctx.strokeStyle='#E0D8CC';
+      ctx.lineWidth=1;
+      ctx.beginPath();ctx.moveTo(padX,y-10);ctx.lineTo(W-padX,y-10);ctx.stroke();
+      ctx.fillStyle='#4A7C59';
+      ctx.fillRect(padX,y-28,6,36);
+      ctx.fillStyle='#2C2416';
+      ctx.font='bold 34px sans-serif';
+      ctx.fillText('缺交班級事務',padX+18,y);
+      y+=lineH;
+    } else {
+      ctx.fillStyle='#2C2416';
+      ctx.font='30px sans-serif';
+      ctx.fillText(row,padX+18,y);
+      y+=lineH;
+    }
+  });
+
+  ctx.fillStyle='#F0EBE0';
+  ctx.fillRect(0,H-footerH,W,footerH);
+  ctx.fillStyle='#8A7F6E';
+  ctx.font='18px sans-serif';
+  ctx.textAlign='center';
+  ctx.fillText('小幫手',W/2,H-16);
+  ctx.textAlign='left';
+
+  preview.appendChild(canvas);
+
+  var dlBtn=document.createElement('button');
+  dlBtn.className='btn btn-d';
+  dlBtn.style.marginTop='10px';
+  dlBtn.textContent='下載圖卡';
+  dlBtn.onclick=function(){
+    var nd=new Date();
+    var fname='缺交_'+student+'_'+nd.getFullYear()+String(nd.getMonth()+1).padStart(2,'0')+String(nd.getDate()).padStart(2,'0')+'.png';
+    canvas.toBlob(function(blob){
+      var url=URL.createObjectURL(blob);
+      var a=document.createElement('a');
+      a.href=url;a.download=fname;
+      document.body.appendChild(a);a.click();
+      setTimeout(function(){document.body.removeChild(a);URL.revokeObjectURL(url);},100);
+    },'image/png');
+  };
+  preview.appendChild(dlBtn);
+  preview.style.display='block';
+}
 window.onload=function(){
   var now=new Date();
   var y=now.getFullYear();
