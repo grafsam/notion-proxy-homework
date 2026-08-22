@@ -270,7 +270,7 @@ function drawCard(d,homeworks,events){
   var hwItems=homeworks.length===0?['（無功課）']:homeworks.map(function(hw){return'・'+hw.subject+(hw.type?' ［'+hw.type+'］':'')+(hw.range?' '+hw.range:'');});
   var evItems=events.length===0?['（無事務）']:events.map(function(ev){return'・'+ev.content+(ev.signed?' ✓':'');});
 
-  var maxPerPage=8;
+  var maxPerPage=10;
   var pages=[];
 
   // Page 1: title + hw section + possibly ev section
