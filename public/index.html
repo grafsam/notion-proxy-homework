@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="zh-TW">
 <head>
@@ -102,10 +103,7 @@
   <div class="panel panel-c" id="panel-c">
     <button class="btn btn-c" id="btn-c" onclick="generateCard()"><span class="btn-text">讀取並產生圖卡 ✦</span><div class="spinner"></div></button>
     <div class="toast" id="toast-c"></div>
-    <div id="card-preview" style="display:none;margin-top:8px;">
-      <canvas id="card-canvas" style="width:100%;border-radius:12px;border:1px solid var(--border);"></canvas>
-      <button class="btn btn-c" style="margin-top:10px;" onclick="downloadCard()">下載圖卡</button>
-    </div>
+    <div id="card-preview" style="display:none;margin-top:8px;"></div>
   </div>
 </div>
 <script>
@@ -256,114 +254,150 @@ function generateCard(){
 }
 
 function drawCard(d,homeworks,events){
-  var canvas=document.getElementById('card-canvas');
   var W=1000;
-  var lineH=58;
-  var padX=50;
-  var padY=44;
-
-  var rows=1+Math.max(homeworks.length,1)+1+Math.max(events.length,1);
-  var H=90+padY*2+rows*lineH+50;
-
-  canvas.width=W;
-  canvas.height=H;
-  var ctx=canvas.getContext('2d');
-
-  ctx.fillStyle='#FFFDF8';
-  ctx.fillRect(0,0,W,H);
-
-  // Top bar
-  ctx.fillStyle='#2C2416';
-  ctx.fillRect(0,0,W,90);
-
-  ctx.fillStyle='#FFF8EE';
-  ctx.font='bold 36px sans-serif';
-  ctx.fillText('小幫手聯絡簿',padX,58);
+  var lineH=72;
+  var padX=56;
+  var padY=50;
+  var headerH=108;
+  var footerH=50;
+  var sectionHeaderH=80;
+  var dividerH=24;
 
   var days=['日','一','二','三','四','五','六'];
   var dateStr=(d.getMonth()+1)+'月'+d.getDate()+'日（'+days[d.getDay()]+'）';
-  ctx.font='24px sans-serif';
-  ctx.textAlign='right';
-  ctx.fillText(dateStr,W-padX,58);
-  ctx.textAlign='left';
 
-  var y=90+padY;
+  // Split into pages: hw on page1, events on page2 (or both on page1 if few items)
+  var hwItems=homeworks.length===0?['（無功課）']:homeworks.map(function(hw){return'・'+hw.subject+(hw.type?' ［'+hw.type+'］':'')+(hw.range?' '+hw.range:'');});
+  var evItems=events.length===0?['（無事務）']:events.map(function(ev){return'・'+ev.content+(ev.signed?' ✓':'');});
 
-  // Homework header
-  ctx.fillStyle='#D45F3C';
-  ctx.fillRect(padX,y-28,6,36);
-  ctx.fillStyle='#2C2416';
-  ctx.font='bold 28px sans-serif';
-  ctx.fillText('功課',padX+18,y);
-  y+=lineH;
+  var maxPerPage=8;
+  var pages=[];
 
-  ctx.font='26px sans-serif';
-  if(homeworks.length===0){
-    ctx.fillStyle='#8A7F6E';
-    ctx.fillText('（無功課）',padX+18,y);
-    y+=lineH;
+  // Page 1: title + hw section + possibly ev section
+  var p1rows=['hw_header'].concat(hwItems);
+  var remainEv=evItems;
+  var evFitP1=maxPerPage-p1rows.length-1; // -1 for ev header
+  if(evFitP1>=evItems.length){
+    p1rows.push('ev_header');
+    p1rows=p1rows.concat(evItems);
+    pages.push({rows:p1rows,hasMore:false});
   } else {
-    homeworks.forEach(function(hw){
-      ctx.fillStyle='#2C2416';
-      var txt='・'+hw.subject+(hw.type?' ［'+hw.type+'］':'')+(hw.range?' '+hw.range:'');
-      ctx.fillText(txt,padX+18,y);
-      y+=lineH;
-    });
+    // Fit some ev on page 1
+    if(evFitP1>0){
+      p1rows.push('ev_header');
+      p1rows=p1rows.concat(evItems.slice(0,evFitP1));
+      remainEv=evItems.slice(evFitP1);
+    } else {
+      p1rows.push('ev_header');
+      remainEv=evItems;
+    }
+    pages.push({rows:p1rows,hasMore:true});
+    // Page 2+
+    while(remainEv.length>0){
+      var chunk=remainEv.splice(0,maxPerPage);
+      pages.push({rows:['ev_header_cont'].concat(chunk),hasMore:remainEv.length>0});
+    }
   }
 
-  y+=14;
-  ctx.strokeStyle='#E0D8CC';
-  ctx.lineWidth=1;
-  ctx.beginPath();ctx.moveTo(padX,y-8);ctx.lineTo(W-padX,y-8);ctx.stroke();
+  // Clear preview
+  var preview=document.getElementById('card-preview');
+  preview.innerHTML='';
 
-  // Events header
-  ctx.fillStyle='#4A7C59';
-  ctx.fillRect(padX,y-28,6,36);
-  ctx.fillStyle='#2C2416';
-  ctx.font='bold 28px sans-serif';
-  ctx.fillText('班級事務',padX+18,y);
-  y+=lineH;
+  pages.forEach(function(page,pi){
+    var canvas=document.createElement('canvas');
+    canvas.style.width='100%';
+    canvas.style.borderRadius='12px';
+    canvas.style.border='1px solid #E0D8CC';
+    canvas.style.display='block';
+    if(pi>0) canvas.style.marginTop='16px';
 
-  ctx.font='26px sans-serif';
-  if(events.length===0){
-    ctx.fillStyle='#8A7F6E';
-    ctx.fillText('（無事務）',padX+18,y);
-    y+=lineH;
-  } else {
-    events.forEach(function(ev){
-      ctx.fillStyle='#2C2416';
-      var txt='・'+ev.content+(ev.signed?' ✓':'');
-      ctx.fillText(txt,padX+18,y);
-      y+=lineH;
+    var H=headerH+padY+page.rows.length*lineH+padY+footerH;
+    canvas.width=W;
+    canvas.height=H;
+    var ctx=canvas.getContext('2d');
+
+    // BG
+    ctx.fillStyle='#FFFDF8';
+    ctx.fillRect(0,0,W,H);
+
+    // Header bar
+    ctx.fillStyle='#2C2416';
+    ctx.fillRect(0,0,W,headerH);
+    ctx.fillStyle='#FFF8EE';
+    ctx.font='bold 44px sans-serif';
+    ctx.fillText('小幫手聯絡簿',padX,70);
+    ctx.font='28px sans-serif';
+    ctx.textAlign='right';
+    var pageLabel=pages.length>1?' ('+(pi+1)+'/'+pages.length+')':'';
+    ctx.fillText(dateStr+pageLabel,W-padX,70);
+    ctx.textAlign='left';
+
+    var y=headerH+padY;
+
+    page.rows.forEach(function(row){
+      if(row==='hw_header'){
+        ctx.fillStyle='#D45F3C';
+        ctx.fillRect(padX,y-34,7,44);
+        ctx.fillStyle='#2C2416';
+        ctx.font='bold 34px sans-serif';
+        ctx.fillText('功課',padX+20,y);
+        y+=sectionHeaderH;
+      } else if(row==='ev_header'||row==='ev_header_cont'){
+        // divider
+        ctx.strokeStyle='#E0D8CC';
+        ctx.lineWidth=1;
+        ctx.beginPath();ctx.moveTo(padX,y-10);ctx.lineTo(W-padX,y-10);ctx.stroke();
+        ctx.fillStyle='#4A7C59';
+        ctx.fillRect(padX,y-34,7,44);
+        ctx.fillStyle='#2C2416';
+        ctx.font='bold 34px sans-serif';
+        ctx.fillText('班級事務'+(row==='ev_header_cont'?' （續）':''),padX+20,y);
+        y+=sectionHeaderH;
+      } else {
+        ctx.fillStyle='#2C2416';
+        ctx.font='30px sans-serif';
+        ctx.fillText(row,padX+20,y);
+        y+=lineH;
+      }
     });
-  }
 
-  // Footer
-  ctx.fillStyle='#F0EBE0';
-  ctx.fillRect(0,H-40,W,40);
-  ctx.fillStyle='#8A7F6E';
-  ctx.font='16px sans-serif';
-  ctx.textAlign='center';
-  ctx.fillText('小幫手',W/2,H-14);
-  ctx.textAlign='left';
+    // Footer
+    ctx.fillStyle='#F0EBE0';
+    ctx.fillRect(0,H-footerH,W,footerH);
+    ctx.fillStyle='#8A7F6E';
+    ctx.font='18px sans-serif';
+    ctx.textAlign='center';
+    ctx.fillText('小幫手',W/2,H-16);
+    ctx.textAlign='left';
 
-  document.getElementById('card-preview').style.display='block';
+    preview.appendChild(canvas);
+  });
+
+  // Download buttons
+  pages.forEach(function(page,pi){
+    var btn=document.createElement('button');
+    btn.className='btn btn-c';
+    btn.style.marginTop='10px';
+    btn.textContent=pages.length>1?'下載圖卡 ('+(pi+1)+'/'+pages.length+')':'下載圖卡';
+    btn.onclick=(function(idx){return function(){
+      var cvs=preview.querySelectorAll('canvas')[idx];
+      var nd=new Date();
+      var fname='聯絡簿_'+nd.getFullYear()+String(nd.getMonth()+1).padStart(2,'0')+String(nd.getDate()).padStart(2,'0')+(pages.length>1?'_'+(idx+1):'')+'.png';
+      cvs.toBlob(function(blob){
+        var url=URL.createObjectURL(blob);
+        var a=document.createElement('a');
+        a.href=url;a.download=fname;
+        document.body.appendChild(a);a.click();
+        setTimeout(function(){document.body.removeChild(a);URL.revokeObjectURL(url);},100);
+      },'image/png');
+    };})(pi);
+    preview.appendChild(btn);
+  });
+
+  preview.style.display='block';
 }
 
-function downloadCard(){
-  var canvas=document.getElementById('card-canvas');
-  var nd=new Date();
-  var fname='聯絡簿_'+nd.getFullYear()+String(nd.getMonth()+1).padStart(2,'0')+String(nd.getDate()).padStart(2,'0')+'.png';
-  canvas.toBlob(function(blob){
-    var url=URL.createObjectURL(blob);
-    var a=document.createElement('a');
-    a.href=url;
-    a.download=fname;
-    document.body.appendChild(a);
-    a.click();
-    setTimeout(function(){document.body.removeChild(a);URL.revokeObjectURL(url);},100);
-  },'image/png');
-}
+function downloadCard(){}
 window.onload=function(){
   var now=new Date();
   var y=now.getFullYear();
