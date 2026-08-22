@@ -257,20 +257,18 @@ function generateCard(){
 
 function drawCard(d,homeworks,events){
   var canvas=document.getElementById('card-canvas');
-  var W=640;
-  var lineH=32;
-  var padX=36;
-  var padY=36;
+  var W=800;
+  var lineH=44;
+  var padX=40;
+  var padY=40;
 
   // Calculate height
   var rows=0;
-  rows+=2; // title + date
   rows+=1; // hw header
   rows+=Math.max(homeworks.length,1);
   rows+=1; // ev header
   rows+=Math.max(events.length,1);
-  rows+=1; // footer
-  var H=padY*2+rows*lineH+60;
+  var H=72+padY*2+rows*lineH+40;
 
   canvas.width=W;
   canvas.height=H;
@@ -282,78 +280,79 @@ function drawCard(d,homeworks,events){
 
   // Top bar
   ctx.fillStyle='#2C2416';
-  ctx.fillRect(0,0,W,56);
+  ctx.fillRect(0,0,W,72);
 
   ctx.fillStyle='#FFF8EE';
-  ctx.font='bold 20px serif';
-  ctx.fillText('小幫手聯絡簿',padX,36);
+  ctx.font='bold 28px sans-serif';
+  ctx.fillText('小幫手聯絡簿',padX,46);
 
   var days=['日','一','二','三','四','五','六'];
   var dateStr=(d.getMonth()+1)+'月'+d.getDate()+'日（'+days[d.getDay()]+'）';
-  ctx.font='14px serif';
+  ctx.font='18px sans-serif';
   ctx.textAlign='right';
-  ctx.fillText(dateStr,W-padX,36);
+  ctx.fillText(dateStr,W-padX,46);
   ctx.textAlign='left';
 
-  var y=56+padY;
+  var y=72+padY;
 
-  // Homework section
+  // Homework section header
   ctx.fillStyle='#D45F3C';
-  ctx.fillRect(padX,y-18,4,22);
+  ctx.fillRect(padX,y-22,5,28);
   ctx.fillStyle='#2C2416';
-  ctx.font='bold 15px serif';
-  ctx.fillText('📚 功課',padX+12,y);
+  ctx.font='bold 20px sans-serif';
+  ctx.fillText('功課',padX+14,y);
   y+=lineH;
 
-  ctx.font='14px serif';
+  ctx.font='18px sans-serif';
   if(homeworks.length===0){
     ctx.fillStyle='#8A7F6E';
-    ctx.fillText('（無功課）',padX+12,y);
+    ctx.fillText('（無功課）',padX+14,y);
     y+=lineH;
   } else {
     homeworks.forEach(function(hw){
       ctx.fillStyle='#2C2416';
       var txt='・'+hw.subject+(hw.type?' ［'+hw.type+'］':'')+(hw.range?' '+hw.range:'');
-      ctx.fillText(txt,padX+12,y);
+      ctx.fillText(txt,padX+14,y);
       y+=lineH;
     });
   }
 
-  y+=8;
+  y+=10;
   // Divider
   ctx.strokeStyle='#E0D8CC';
-  ctx.beginPath();ctx.moveTo(padX,y-8);ctx.lineTo(W-padX,y-8);ctx.stroke();
+  ctx.lineWidth=1;
+  ctx.beginPath();ctx.moveTo(padX,y-6);ctx.lineTo(W-padX,y-6);ctx.stroke();
 
-  // Events section
+  // Events section header
   ctx.fillStyle='#4A7C59';
-  ctx.fillRect(padX,y-18,4,22);
+  ctx.fillRect(padX,y-22,5,28);
   ctx.fillStyle='#2C2416';
-  ctx.font='bold 15px serif';
-  ctx.fillText('📋 班級事務',padX+12,y);
+  ctx.font='bold 20px sans-serif';
+  ctx.fillText('班級事務',padX+14,y);
   y+=lineH;
 
-  ctx.font='14px serif';
+  ctx.font='18px sans-serif';
   if(events.length===0){
     ctx.fillStyle='#8A7F6E';
-    ctx.fillText('（無事務）',padX+12,y);
+    ctx.fillText('（無事務）',padX+14,y);
     y+=lineH;
   } else {
     events.forEach(function(ev){
       ctx.fillStyle='#2C2416';
       var txt='・'+ev.content+(ev.signed?' ✓':'');
-      ctx.fillText(txt,padX+12,y);
+      ctx.fillText(txt,padX+14,y);
       y+=lineH;
     });
   }
 
-  y+=16;
+  y+=20;
   // Footer
-  ctx.fillStyle='#E0D8CC';
-  ctx.fillRect(0,H-28,W,28);
+  ctx.fillStyle='#F0EBE0';
+  ctx.fillRect(0,H-34,W,34);
   ctx.fillStyle='#8A7F6E';
-  ctx.font='11px serif';
+  ctx.font='13px sans-serif';
   ctx.textAlign='center';
-  ctx.fillText('小幫手',W/2,H-10);
+  ctx.fillText('小幫手',W/2,H-12);
   ctx.textAlign='left';
 
   document.getElementById('card-preview').style.display='block';
@@ -361,10 +360,17 @@ function drawCard(d,homeworks,events){
 
 function downloadCard(){
   var canvas=document.getElementById('card-canvas');
-  var a=document.createElement('a');
-  var nd=new Date();a.download='聯絡簿_'+nd.getFullYear()+(nd.getMonth()+1)+nd.getDate()+'.png';
-  a.href=canvas.toDataURL('image/png');
-  a.click();
+  var nd=new Date();
+  var fname='聯絡簿_'+nd.getFullYear()+String(nd.getMonth()+1).padStart(2,'0')+String(nd.getDate()).padStart(2,'0')+'.png';
+  canvas.toBlob(function(blob){
+    var url=URL.createObjectURL(blob);
+    var a=document.createElement('a');
+    a.href=url;
+    a.download=fname;
+    document.body.appendChild(a);
+    a.click();
+    setTimeout(function(){document.body.removeChild(a);URL.revokeObjectURL(url);},100);
+  },'image/png');
 }
 window.onload=function(){
   var now=new Date();
