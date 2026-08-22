@@ -257,102 +257,94 @@ function generateCard(){
 
 function drawCard(d,homeworks,events){
   var canvas=document.getElementById('card-canvas');
-  var W=800;
-  var lineH=44;
-  var padX=40;
-  var padY=40;
+  var W=1000;
+  var lineH=58;
+  var padX=50;
+  var padY=44;
 
-  // Calculate height
-  var rows=0;
-  rows+=1; // hw header
-  rows+=Math.max(homeworks.length,1);
-  rows+=1; // ev header
-  rows+=Math.max(events.length,1);
-  var H=72+padY*2+rows*lineH+40;
+  var rows=1+Math.max(homeworks.length,1)+1+Math.max(events.length,1);
+  var H=90+padY*2+rows*lineH+50;
 
   canvas.width=W;
   canvas.height=H;
   var ctx=canvas.getContext('2d');
 
-  // Background
   ctx.fillStyle='#FFFDF8';
   ctx.fillRect(0,0,W,H);
 
   // Top bar
   ctx.fillStyle='#2C2416';
-  ctx.fillRect(0,0,W,72);
+  ctx.fillRect(0,0,W,90);
 
   ctx.fillStyle='#FFF8EE';
-  ctx.font='bold 28px sans-serif';
-  ctx.fillText('小幫手聯絡簿',padX,46);
+  ctx.font='bold 36px sans-serif';
+  ctx.fillText('小幫手聯絡簿',padX,58);
 
   var days=['日','一','二','三','四','五','六'];
   var dateStr=(d.getMonth()+1)+'月'+d.getDate()+'日（'+days[d.getDay()]+'）';
-  ctx.font='22px sans-serif';
+  ctx.font='24px sans-serif';
   ctx.textAlign='right';
-  ctx.fillText(dateStr,W-padX,46);
+  ctx.fillText(dateStr,W-padX,58);
   ctx.textAlign='left';
 
-  var y=72+padY;
+  var y=90+padY;
 
-  // Homework section header
+  // Homework header
   ctx.fillStyle='#D45F3C';
-  ctx.fillRect(padX,y-22,5,28);
+  ctx.fillRect(padX,y-28,6,36);
   ctx.fillStyle='#2C2416';
-  ctx.font='bold 20px sans-serif';
-  ctx.fillText('功課',padX+14,y);
+  ctx.font='bold 28px sans-serif';
+  ctx.fillText('功課',padX+18,y);
   y+=lineH;
 
-  ctx.font='22px sans-serif';
+  ctx.font='26px sans-serif';
   if(homeworks.length===0){
     ctx.fillStyle='#8A7F6E';
-    ctx.fillText('（無功課）',padX+14,y);
+    ctx.fillText('（無功課）',padX+18,y);
     y+=lineH;
   } else {
     homeworks.forEach(function(hw){
       ctx.fillStyle='#2C2416';
       var txt='・'+hw.subject+(hw.type?' ［'+hw.type+'］':'')+(hw.range?' '+hw.range:'');
-      ctx.fillText(txt,padX+14,y);
+      ctx.fillText(txt,padX+18,y);
       y+=lineH;
     });
   }
 
-  y+=10;
-  // Divider
+  y+=14;
   ctx.strokeStyle='#E0D8CC';
   ctx.lineWidth=1;
-  ctx.beginPath();ctx.moveTo(padX,y-6);ctx.lineTo(W-padX,y-6);ctx.stroke();
+  ctx.beginPath();ctx.moveTo(padX,y-8);ctx.lineTo(W-padX,y-8);ctx.stroke();
 
-  // Events section header
+  // Events header
   ctx.fillStyle='#4A7C59';
-  ctx.fillRect(padX,y-22,5,28);
+  ctx.fillRect(padX,y-28,6,36);
   ctx.fillStyle='#2C2416';
-  ctx.font='bold 20px sans-serif';
-  ctx.fillText('班級事務',padX+14,y);
+  ctx.font='bold 28px sans-serif';
+  ctx.fillText('班級事務',padX+18,y);
   y+=lineH;
 
-  ctx.font='22px sans-serif';
+  ctx.font='26px sans-serif';
   if(events.length===0){
     ctx.fillStyle='#8A7F6E';
-    ctx.fillText('（無事務）',padX+14,y);
+    ctx.fillText('（無事務）',padX+18,y);
     y+=lineH;
   } else {
     events.forEach(function(ev){
       ctx.fillStyle='#2C2416';
       var txt='・'+ev.content+(ev.signed?' ✓':'');
-      ctx.fillText(txt,padX+14,y);
+      ctx.fillText(txt,padX+18,y);
       y+=lineH;
     });
   }
 
-  y+=20;
   // Footer
   ctx.fillStyle='#F0EBE0';
-  ctx.fillRect(0,H-34,W,34);
+  ctx.fillRect(0,H-40,W,40);
   ctx.fillStyle='#8A7F6E';
-  ctx.font='13px sans-serif';
+  ctx.font='16px sans-serif';
   ctx.textAlign='center';
-  ctx.fillText('小幫手',W/2,H-12);
+  ctx.fillText('小幫手',W/2,H-14);
   ctx.textAlign='left';
 
   document.getElementById('card-preview').style.display='block';
