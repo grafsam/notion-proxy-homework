@@ -324,9 +324,9 @@ function drawCard(d,homeworks,events){
     ctx.fillStyle='#2C2416';
     ctx.fillRect(0,0,W,headerH);
     ctx.fillStyle='#FFF8EE';
-    ctx.font='bold 44px sans-serif';
+    ctx.font='bold 56px sans-serif';
     ctx.fillText('小幫手聯絡簿',padX,70);
-    ctx.font='28px sans-serif';
+    ctx.font='36px sans-serif';
     ctx.textAlign='right';
     var pageLabel=pages.length>1?' ('+(pi+1)+'/'+pages.length+')':'';
     ctx.fillText(dateStr+pageLabel,W-padX,70);
@@ -339,7 +339,7 @@ function drawCard(d,homeworks,events){
         ctx.fillStyle='#D45F3C';
         ctx.fillRect(padX,y-34,7,44);
         ctx.fillStyle='#2C2416';
-        ctx.font='bold 34px sans-serif';
+        ctx.font='bold 42px sans-serif';
         ctx.fillText('功課',padX+20,y);
         y+=sectionHeaderH;
       } else if(row==='ev_header'||row==='ev_header_cont'){
@@ -350,12 +350,12 @@ function drawCard(d,homeworks,events){
         ctx.fillStyle='#4A7C59';
         ctx.fillRect(padX,y-34,7,44);
         ctx.fillStyle='#2C2416';
-        ctx.font='bold 34px sans-serif';
+        ctx.font='bold 42px sans-serif';
         ctx.fillText('班級事務'+(row==='ev_header_cont'?' （續）':''),padX+20,y);
         y+=sectionHeaderH;
       } else {
         ctx.fillStyle='#2C2416';
-        ctx.font='30px sans-serif';
+        ctx.font='38px sans-serif';
         ctx.fillText(row,padX+20,y);
         y+=lineH;
       }
@@ -365,7 +365,7 @@ function drawCard(d,homeworks,events){
     ctx.fillStyle='#F0EBE0';
     ctx.fillRect(0,H-footerH,W,footerH);
     ctx.fillStyle='#8A7F6E';
-    ctx.font='18px sans-serif';
+    ctx.font='22px sans-serif';
     ctx.textAlign='center';
     ctx.fillText('小幫手',W/2,H-16);
     ctx.textAlign='left';
