@@ -229,10 +229,10 @@ function generateCard(){
     body:JSON.stringify({database_id:DB_A,filter:{and:[{property:'時間',date:{on_or_after:filterDate}},{property:'時間',date:{before:nextDayStr}}]}})
   }).then(function(r){return r.json();});
 
-  // 班級事務：截止日期是 date
+  // 班級事務：截止時間是 datetime，用當天範圍查詢
   var queryB=fetch('https://notion-proxy-homework.vercel.app/api/notion-query',{
     method:'POST',headers:{'Content-Type':'application/json'},
-    body:JSON.stringify({database_id:DB_B,filter:{property:'截止日期',date:{equals:filterDate}}})
+    body:JSON.stringify({database_id:DB_B,filter:{and:[{property:'截止時間',date:{on_or_after:filterDate}},{property:'截止時間',date:{before:nextDayStr}}]}})
   }).then(function(r){return r.json();});
 
   Promise.all([queryA,queryB]).then(function(results){
