@@ -103,6 +103,10 @@
     <div class="toast" id="toast-b"></div>
   </div>
   <div class="panel panel-c" id="panel-c">
+    <div class="field">
+      <label>選擇日期</label>
+      <input type="date" id="c-date">
+    </div>
     <button class="btn btn-c" id="btn-c" onclick="generateCard()"><span class="btn-text">讀取並產生圖卡 ✦</span><div class="spinner"></div></button>
     <div class="toast" id="toast-c"></div>
     <div id="card-preview" style="display:none;margin-top:8px;"></div>
@@ -223,18 +227,24 @@ function postNotion(dbId,properties,toastId,clearIds,btn){
 
 
 function generateCard(){
+  var dateVal=document.getElementById('c-date').value;
+  if(!dateVal){showToast('toast-c','error','請選擇日期');return;}
   var btn=document.getElementById('btn-c');
   btn.disabled=true;btn.classList.add('loading');
 
-  // 讀取全部資料，不篩選日期
+  // 用 created_time 篩選當天新增的資料
+  var nextDay=new Date(dateVal+'T00:00:00');
+  nextDay.setDate(nextDay.getDate()+1);
+  var nextDayStr=nextDay.getFullYear()+'-'+String(nextDay.getMonth()+1).padStart(2,'0')+'-'+String(nextDay.getDate()).padStart(2,'0');
+
   var queryA=fetch('https://notion-proxy-homework.vercel.app/api/notion-query',{
     method:'POST',headers:{'Content-Type':'application/json'},
-    body:JSON.stringify({database_id:DB_A})
+    body:JSON.stringify({database_id:DB_A,filter:{and:[{timestamp:'created_time',created_time:{on_or_after:dateVal+'T00:00:00+08:00'}},{timestamp:'created_time',created_time:{before:nextDayStr+'T00:00:00+08:00'}}]}})
   }).then(function(r){return r.json();});
 
   var queryB=fetch('https://notion-proxy-homework.vercel.app/api/notion-query',{
     method:'POST',headers:{'Content-Type':'application/json'},
-    body:JSON.stringify({database_id:DB_B})
+    body:JSON.stringify({database_id:DB_B,filter:{and:[{timestamp:'created_time',created_time:{on_or_after:dateVal+'T00:00:00+08:00'}},{timestamp:'created_time',created_time:{before:nextDayStr+'T00:00:00+08:00'}}]}})
   }).then(function(r){return r.json();});
 
   Promise.all([queryA,queryB]).then(function(results){
@@ -263,7 +273,7 @@ function generateCard(){
       });
     }
 
-    var today=new Date();var d=today;drawCard(d,homeworks,events);
+    var d=new Date(dateVal+"T00:00:00");drawCard(d,homeworks,events);
     btn.disabled=false;btn.classList.remove('loading');
   }).catch(function(e){
     showToast('toast-c','error','讀取失敗：'+e.message);
@@ -604,6 +614,10 @@ function drawAbsenceCard(student,homeworks,events){
   preview.style.display='block';
 }
 window.onload=function(){
+  var pad=function(n){return String(n).padStart(2,"0");};
+  var now=new Date();
+  var todayStr=now.getFullYear()+"-"+pad(now.getMonth()+1)+"-"+pad(now.getDate());
+  document.getElementById("c-date").value=todayStr;
   var now=new Date();
   var y=now.getFullYear();
   var mo=String(now.getMonth()+1).padStart(2,'0');
