@@ -71,8 +71,7 @@
     </div>
   </div>
   <div class="panel panel-a visible" id="panel-a">
-    <div class="field"><label>時間 <span class="req">*</span></label><input type="datetime-local" id="a-time"></div>
-    <div class="field"><label>日期</label><input type="date" id="a-date"></div>
+    <div class="field"><label>新增日期 <span class="req">*</span></label><input type="date" id="a-date"></div>
     <div class="row">
       <div class="field"><label>科目 <span class="req">*</span></label><div class="select-wrap"><select id="a-subject"><option value="">— 選擇 —</option><option>國文</option><option>數學</option><option>英文</option><option>歷史</option><option>地理</option><option>公民</option><option>自然</option><option>生物</option><option>其他</option></select></div></div>
       <div class="field"><label>選取</label><div class="select-wrap"><select id="a-type"><option value="">— 選擇 —</option><option>作業</option><option>考試</option><option>預習</option><option>複習</option><option>其他</option></select></div></div>
@@ -83,6 +82,7 @@
     <div class="toast" id="toast-a"></div>
   </div>
   <div class="panel panel-b" id="panel-b">
+    <div class="field"><label>新增日期 <span class="req">*</span></label><input type="date" id="b-date"></div>
     <div class="field">
       <label>班級事務 <span class="req">*</span> <span style="font-size:10px;font-weight:400;text-transform:none;letter-spacing:0">可複選</span></label>
       <div class="tags-wrap" id="tags-wrap">
@@ -165,15 +165,12 @@ function notionDT(val){
 
 function submitA(){
   var subject=document.getElementById('a-subject').value;
-  var timeVal=document.getElementById('a-time').value;
   if(!subject){showToast('toast-a','error','請選擇科目');return;}
-  if(!timeVal){showToast('toast-a','error','請填入時間');return;}
   var btn=document.getElementById('btn-a');
   btn.disabled=true;btn.classList.add('loading');
   var props={};
-  props['時間']={date:{start:notionDT(timeVal)}};
   var dv=document.getElementById('a-date').value;
-  if(dv) props['日期']={date:{start:dv}};
+  if(dv){props['時間']={date:{start:dv}};props['日期']={date:{start:dv}};}
   props['科目']={select:{name:subject}};
   var tv=document.getElementById('a-type').value;
   if(tv) props['選取']={select:{name:tv}};
@@ -197,6 +194,8 @@ function submitB(){
   props['內容']={rich_text:[{text:{content:content}}]};
   var dl=document.getElementById('b-deadline').value;
   if(dl) props['截止日期']={date:{start:dl}};
+  var bd=document.getElementById('b-date').value;
+  if(bd){props['截止時間']={date:{start:bd}};}
   var sv=document.getElementById('b-serial').value.trim();
   if(sv) props['序號']={title:[{text:{content:sv}}]};
   // 缺交表為 Relation 類型，略過
@@ -624,8 +623,7 @@ window.onload=function(){
   var d=String(now.getDate()).padStart(2,'0');
   var h=String(now.getHours()).padStart(2,'0');
   var mi=String(now.getMinutes()).padStart(2,'0');
-  document.getElementById('a-time').value=y+'-'+mo+'-'+d+'T'+h+':'+mi;
-  document.getElementById('a-date').value=y+'-'+mo+'-'+d;
+
 };
 </script>
 </body>
