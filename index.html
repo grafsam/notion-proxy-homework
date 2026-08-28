@@ -195,7 +195,7 @@ function submitB(){
   var dl=document.getElementById('b-deadline').value;
   if(dl) props['截止日期']={date:{start:dl}};
   var bd=document.getElementById('b-date').value;
-  if(bd){props['新增日期']={date:{start:bd+'T00:00:00+08:00'}};}
+  if(bd){props['新增日期']={date:{start:bd}};}
   var sv=document.getElementById('b-serial').value.trim();
   if(sv) props['序號']={title:[{text:{content:sv}}]};
   // 缺交表為 Relation 類型，略過
