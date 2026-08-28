@@ -170,7 +170,7 @@ function submitA(){
   btn.disabled=true;btn.classList.add('loading');
   var props={};
   var dv=document.getElementById('a-date').value;
-  if(dv){props['時間']={date:{start:dv}};props['日期']={date:{start:dv}};}
+  if(dv){props['日期']={date:{start:dv}};}
   props['科目']={select:{name:subject}};
   var tv=document.getElementById('a-type').value;
   if(tv) props['選取']={select:{name:tv}};
